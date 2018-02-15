@@ -5,11 +5,12 @@ A simple logger for go.
 ### Current Features
 
 * Different logging prefixes (Info, Debug, Error)
-* Log information includes
- * package name
- * file name
- * function name
- * line number
+* Create logger with config struct indicating log prefix verbosity.
+* Log information can includes
+  * package name
+  * file name
+  * function name
+  * line number
 
 ### Future Features
 * initialize with an output stream

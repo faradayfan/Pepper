@@ -15,11 +15,23 @@ type Pepper interface {
 }
 
 type pepper struct{
+	Config *Config
 	InfoPrefix string
 	DebugPrefix string
 	ErrorPrefix string
-
 }
+
+type Config struct {
+	Prefix *Prefix
+}
+
+type Prefix struct {
+	FileName bool
+	PackageName bool
+	FunctionName bool
+	LineNumber bool
+}
+
 
 type callInfo struct{
 	packageName string
@@ -51,27 +63,44 @@ func retrieveCallInfo() *callInfo {
 	}
 }
 
-func formatPrefix(prefix string, ci *callInfo) string{
-	return prefix + " - " + ci.fileName + " - " + ci.packageName + "." + ci.funcName + " Line " + strconv.Itoa(ci.line) + ": "
+func formatPrefix(prefix string, ci *callInfo, config *Config) string{
+	result := prefix
+	if config.Prefix.FileName {
+		result = result + " - " + ci.fileName
+	}
+	if config.Prefix.PackageName {
+		result = result + " - " + ci.packageName
+		if config.Prefix.FunctionName {
+			result = result + "."
+		}
+	}
+	if config.Prefix.FunctionName {
+		result = result + ci.funcName
+	}
+	if config.Prefix.LineNumber {
+		result = result + " Line " + strconv.Itoa(ci.line)
+	}
+	return result + ": "
 }
 
 func (p *pepper) Info(message string){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.InfoPrefix, callInfo) + message)
+	fmt.Println(formatPrefix(p.InfoPrefix, callInfo, p.Config) + message)
 }
 
 func (p *pepper) Error(message string){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.ErrorPrefix, callInfo) + message)
+	fmt.Println(formatPrefix(p.ErrorPrefix, callInfo, p.Config) + message)
 }
 
 func (p *pepper) Debug(message string){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.DebugPrefix, callInfo) + message)
+	fmt.Println(formatPrefix(p.DebugPrefix, callInfo, p.Config) + message)
 }
 
-func New() Pepper {
+func New(config *Config) Pepper {
 	return &pepper{
+		Config: config,
 		InfoPrefix: "Info",
 		DebugPrefix: "Debug",
 		ErrorPrefix: "Error",
