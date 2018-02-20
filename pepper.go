@@ -6,12 +6,14 @@ import (
 	"strings"
 	"fmt"
 	"strconv"
+	"encoding/json"
+	"os"
 )
 
 type Pepper interface {
-	Info(message string)
-	Debug(message string)
-	Error(message string)
+	Info(messages ...interface{})
+	Debug(messages ...interface{})
+	Error(messages ...interface{})
 }
 
 type pepper struct{
@@ -23,7 +25,9 @@ type pepper struct{
 
 type Config struct {
 	Prefix *Prefix
+	Output *os.File
 }
+
 
 type Prefix struct {
 	FileName bool
@@ -63,6 +67,11 @@ func retrieveCallInfo() *callInfo {
 	}
 }
 
+func jsonify(obj interface{}) string{
+	val, _ := json.Marshal(obj)
+	return string(val)
+}
+
 func formatPrefix(prefix string, ci *callInfo, config *Config) string{
 	result := prefix
 	if config.Prefix.FileName {
@@ -83,22 +92,35 @@ func formatPrefix(prefix string, ci *callInfo, config *Config) string{
 	return result + ": "
 }
 
-func (p *pepper) Info(message string){
+func (p *pepper) Info(messages ...interface{}){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.InfoPrefix, callInfo, p.Config) + message)
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.InfoPrefix, callInfo, p.Config) , jsonify(messages)))
 }
 
-func (p *pepper) Error(message string){
+func (p *pepper) Error(messages ...interface{}){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.ErrorPrefix, callInfo, p.Config) + message)
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.ErrorPrefix, callInfo, p.Config) , jsonify(messages)))
 }
 
-func (p *pepper) Debug(message string){
+func (p *pepper) Debug(messages ...interface{}){
 	callInfo := retrieveCallInfo()
-	fmt.Println(formatPrefix(p.DebugPrefix, callInfo, p.Config) + message)
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.DebugPrefix, callInfo, p.Config) , jsonify(messages)))
 }
 
 func New(config *Config) Pepper {
+	return &pepper{
+		Config: config,
+		InfoPrefix: "Info",
+		DebugPrefix: "Debug",
+		ErrorPrefix: "Error",
+	}
+}
+
+func NewDefault() Pepper {
+	config := &Config{
+		&Prefix{true, true, true, true},
+		os.Stdout,
+		}
 	return &pepper{
 		Config: config,
 		InfoPrefix: "Info",
