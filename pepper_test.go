@@ -8,8 +8,8 @@ import (
 func TestNew(t *testing.T) {
 	prefix := &Prefix{
 		FileName: true,
-		PackageName: false,
-		FunctionName: false,
+		PackageName: true,
+		FunctionName: true,
 		LineNumber: true,
 	}
 
@@ -36,6 +36,7 @@ func TestNew(t *testing.T) {
 	p.Error("This is an error message")
 	p.Debug("This is a debug message")
 
+	p.Debug(config)
 }
 
 func TestNewDefault(t *testing.T) {
@@ -50,4 +51,5 @@ func TestNewDefault(t *testing.T) {
 	spec.Error("This is an error message")
 	spec.Debug("This is a debug message")
 	spec.Info(obj{"asdf", "wert"}, "another message")
+
 }
