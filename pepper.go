@@ -1,13 +1,13 @@
 package pepper
 
 import (
-	"runtime"
-	"path"
-	"strings"
-	"fmt"
-	"strconv"
 	"encoding/json"
+	"fmt"
 	"os"
+	"path"
+	"runtime"
+	"strconv"
+	"strings"
 )
 
 type Pepper interface {
@@ -16,9 +16,9 @@ type Pepper interface {
 	Error(messages ...interface{})
 }
 
-type pepper struct{
-	Config *Config
-	InfoPrefix string
+type pepper struct {
+	Config      *Config
+	InfoPrefix  string
 	DebugPrefix string
 	ErrorPrefix string
 }
@@ -28,20 +28,18 @@ type Config struct {
 	Output *os.File
 }
 
-
 type Prefix struct {
-	FileName bool
-	PackageName bool
+	FileName     bool
+	PackageName  bool
 	FunctionName bool
-	LineNumber bool
+	LineNumber   bool
 }
 
-
-type callInfo struct{
+type callInfo struct {
 	packageName string
-	fileName string
-	funcName string
-	line int
+	fileName    string
+	funcName    string
+	line        int
 }
 
 func retrieveCallInfo() *callInfo {
@@ -67,12 +65,35 @@ func retrieveCallInfo() *callInfo {
 	}
 }
 
-func jsonify(obj interface{}) string{
+func cleanPrint(objs []interface{}) string {
+	newObjs := make([]string, len(objs))
+	for i, obj := range objs {
+		newObjs[i] = cleanPrintSingle(obj)
+	}
+	return jsonify(newObjs)
+}
+
+func cleanPrintSingle(obj interface{}) string {
+	switch v := obj.(type) {
+	case string:
+		return v
+	case error:
+		return v.Error()
+	case fmt.Stringer:
+		return v.String()
+	case fmt.GoStringer:
+		return v.GoString()
+	default:
+		return jsonify(obj)
+	}
+}
+
+func jsonify(obj interface{}) string {
 	val, _ := json.Marshal(obj)
 	return string(val)
 }
 
-func formatPrefix(prefix string, ci *callInfo, config *Config) string{
+func formatPrefix(prefix string, ci *callInfo, config *Config) string {
 	result := prefix
 	if config.Prefix.FileName {
 		result = result + " - " + ci.fileName
@@ -92,25 +113,25 @@ func formatPrefix(prefix string, ci *callInfo, config *Config) string{
 	return result + ": "
 }
 
-func (p *pepper) Info(messages ...interface{}){
+func (p *pepper) Info(messages ...interface{}) {
 	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.InfoPrefix, callInfo, p.Config) , jsonify(messages)))
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.InfoPrefix, callInfo, p.Config), cleanPrint(messages)))
 }
 
-func (p *pepper) Error(messages ...interface{}){
+func (p *pepper) Error(messages ...interface{}) {
 	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.ErrorPrefix, callInfo, p.Config) , jsonify(messages)))
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.ErrorPrefix, callInfo, p.Config), cleanPrint(messages)))
 }
 
-func (p *pepper) Debug(messages ...interface{}){
+func (p *pepper) Debug(messages ...interface{}) {
 	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.DebugPrefix, callInfo, p.Config) , jsonify(messages)))
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.DebugPrefix, callInfo, p.Config), cleanPrint(messages)))
 }
 
 func New(config *Config) Pepper {
 	return &pepper{
-		Config: config,
-		InfoPrefix: "Info",
+		Config:      config,
+		InfoPrefix:  "Info",
 		DebugPrefix: "Debug",
 		ErrorPrefix: "Error",
 	}
@@ -120,10 +141,10 @@ func NewDefault() Pepper {
 	config := &Config{
 		&Prefix{true, true, true, true},
 		os.Stdout,
-		}
+	}
 	return &pepper{
-		Config: config,
-		InfoPrefix: "Info",
+		Config:      config,
+		InfoPrefix:  "Info",
 		DebugPrefix: "Debug",
 		ErrorPrefix: "Error",
 	}
