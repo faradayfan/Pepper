@@ -65,12 +65,24 @@ func retrieveCallInfo() *callInfo {
 	}
 }
 
-func cleanPrint(obj interface{}) string {
+func cleanPrint(objs []interface{}) string {
+	newObjs := make([]string, len(objs))
+	for i, obj := range objs {
+		newObjs[i] = cleanPrintSingle(obj)
+	}
+	return jsonify(newObjs)
+}
+
+func cleanPrintSingle(obj interface{}) string {
 	switch v := obj.(type) {
-	case fmt.GoStringer:
-		return jsonify(v.GoString())
+	case string:
+		return v
 	case error:
-		return jsonify(v.Error())
+		return v.Error()
+	case fmt.Stringer:
+		return v.String()
+	case fmt.GoStringer:
+		return v.GoString()
 	default:
 		return jsonify(obj)
 	}
