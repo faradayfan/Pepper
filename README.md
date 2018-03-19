@@ -4,21 +4,22 @@ A simple logger for go.
  
 ### Features
 
-* Different logging prefixes (Info, Debug, Error)
+* RFC 5424 Loggin levels
 * Create logger with config struct indicating log prefix verbosity.
-* Log information can includes
+* In addition to log level prefixes, log information can includes
   * package name
   * file name
   * function name
   * line number
 * Can specify an output stream
 * JSONifies message structures
+* Intelligently handles error objects and other objects that stringify itself.
 
 ### Setup
 
-There are two ways to start using pepper.
+There are three ways to start using pepper.
 
-The Easy Way
+#### The Easy Way
 ```go
 package test
 
@@ -33,7 +34,23 @@ func main(){
 
 ```
 
-The Configurable Way
+#### The Log Level Way
+```go
+package test
+
+import (
+	"github.com/faradayfan/Pepper"
+	)
+func main(){
+	// log levels are 0 - 7 ( RFC 5424 )
+	log := pepper.NewDefaultLevel(7)
+	
+	log.Info("this is a message")
+}
+
+```
+
+#### The Configurable Way
 ```go
 package test
 

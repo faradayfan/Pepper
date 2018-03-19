@@ -11,21 +11,49 @@ import (
 )
 
 type Pepper interface {
+	System(messages ...interface{})
+	Alert(messages ...interface{})
+	Critical(messages ...interface{})
+	Error(messages ...interface{})
+	Warning(messages ...interface{})
+	Notice(messages ...interface{})
 	Info(messages ...interface{})
 	Debug(messages ...interface{})
-	Error(messages ...interface{})
+}
+
+type levelPrefixes struct {
+	system   string
+	alert    string
+	critical string
+	error    string
+	warning  string
+	notice   string
+	info     string
+	debug    string
+}
+
+func getLevelPrefixes() *levelPrefixes {
+	return &levelPrefixes{
+		"System",   	// 0
+		"Alert",    	// 1
+		"Critical",	// 2
+		"Error",		// 3
+		"Warning",	// 4
+		"Notice",		// 5
+		"Info",		// 6
+		"Debug",		// 7
+	}
 }
 
 type pepper struct {
-	Config      *Config
-	InfoPrefix  string
-	DebugPrefix string
-	ErrorPrefix string
+	Config        *Config
+	levelPrefixes *levelPrefixes
 }
 
 type Config struct {
 	Prefix *Prefix
 	Output *os.File
+	Level  int
 }
 
 type Prefix struct {
@@ -113,27 +141,82 @@ func formatPrefix(prefix string, ci *callInfo, config *Config) string {
 	return result + ": "
 }
 
-func (p *pepper) Info(messages ...interface{}) {
+func (p *pepper) printMsg(prefix string, callInfo *callInfo, messages []interface{}) {
+	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(prefix, callInfo, p.Config), cleanPrint(messages)))
+}
+
+func (p *pepper) System(messages ...interface{}) {
 	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.InfoPrefix, callInfo, p.Config), cleanPrint(messages)))
+	p.printMsg(p.levelPrefixes.system, callInfo, messages)
+}
+
+func (p *pepper) Alert(messages ...interface{}) {
+	if p.Config.Level > 0 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.alert, callInfo, messages)
+	}
+}
+
+func (p *pepper) Critical(messages ...interface{}) {
+	if p.Config.Level > 1 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.critical, callInfo, messages)
+	}
 }
 
 func (p *pepper) Error(messages ...interface{}) {
-	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.ErrorPrefix, callInfo, p.Config), cleanPrint(messages)))
+	if p.Config.Level > 2 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.error, callInfo, messages)
+	}
+}
+
+func (p *pepper) Warning(messages ...interface{}) {
+	if p.Config.Level > 3 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.warning, callInfo, messages)
+	}
+}
+
+func (p *pepper) Notice(messages ...interface{}) {
+	if p.Config.Level > 4 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.notice, callInfo, messages)
+	}
+}
+
+func (p *pepper) Info(messages ...interface{}) {
+	if p.Config.Level > 5 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.info, callInfo, messages)
+	}
 }
 
 func (p *pepper) Debug(messages ...interface{}) {
-	callInfo := retrieveCallInfo()
-	fmt.Fprintln(p.Config.Output, fmt.Sprintf("%s%s", formatPrefix(p.DebugPrefix, callInfo, p.Config), cleanPrint(messages)))
+	if p.Config.Level > 6 {
+		callInfo := retrieveCallInfo()
+		p.printMsg(p.levelPrefixes.debug, callInfo, messages)
+	}
 }
 
 func New(config *Config) Pepper {
+	p := getLevelPrefixes()
 	return &pepper{
-		Config:      config,
-		InfoPrefix:  "Info",
-		DebugPrefix: "Debug",
-		ErrorPrefix: "Error",
+		Config:        config,
+		levelPrefixes: p,
+	}
+}
+
+func NewDefaultLevel(level int) Pepper {
+	config := &Config{
+		&Prefix{true, true, true, true},
+		os.Stdout,
+		level,
+	}
+	p := getLevelPrefixes()
+	return &pepper{
+		Config:        config,
+		levelPrefixes: p,
 	}
 }
 
@@ -141,11 +224,11 @@ func NewDefault() Pepper {
 	config := &Config{
 		&Prefix{true, true, true, true},
 		os.Stdout,
+		7,
 	}
+	p := getLevelPrefixes()
 	return &pepper{
-		Config:      config,
-		InfoPrefix:  "Info",
-		DebugPrefix: "Debug",
-		ErrorPrefix: "Error",
+		Config:        config,
+		levelPrefixes: p,
 	}
 }
