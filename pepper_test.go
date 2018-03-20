@@ -56,7 +56,7 @@ func TestNewDefault(t *testing.T) {
 
 
 func TestNewDefaultLevel(t *testing.T) {
-	spec := NewDefaultLevel(7)
+	spec := NewDefaultLevel(Debug)
 
 	type obj struct{
 		Message string

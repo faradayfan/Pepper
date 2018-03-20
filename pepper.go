@@ -21,6 +21,17 @@ type Pepper interface {
 	Debug(messages ...interface{})
 }
 
+const (
+	System = 0
+	Alert = 1
+	Critical = 2
+	Error = 3
+	Warning = 4
+	Notice = 5
+	Info = 6
+	Debug = 7
+)
+
 type levelPrefixes struct {
 	system   string
 	alert    string
@@ -151,49 +162,49 @@ func (p *pepper) System(messages ...interface{}) {
 }
 
 func (p *pepper) Alert(messages ...interface{}) {
-	if p.Config.Level > 0 {
+	if p.Config.Level >= Alert {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.alert, callInfo, messages)
 	}
 }
 
 func (p *pepper) Critical(messages ...interface{}) {
-	if p.Config.Level > 1 {
+	if p.Config.Level >= Critical {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.critical, callInfo, messages)
 	}
 }
 
 func (p *pepper) Error(messages ...interface{}) {
-	if p.Config.Level > 2 {
+	if p.Config.Level >= Error {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.error, callInfo, messages)
 	}
 }
 
 func (p *pepper) Warning(messages ...interface{}) {
-	if p.Config.Level > 3 {
+	if p.Config.Level >= Warning{
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.warning, callInfo, messages)
 	}
 }
 
 func (p *pepper) Notice(messages ...interface{}) {
-	if p.Config.Level > 4 {
+	if p.Config.Level >= Notice {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.notice, callInfo, messages)
 	}
 }
 
 func (p *pepper) Info(messages ...interface{}) {
-	if p.Config.Level > 5 {
+	if p.Config.Level >= Info {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.info, callInfo, messages)
 	}
 }
 
 func (p *pepper) Debug(messages ...interface{}) {
-	if p.Config.Level > 6 {
+	if p.Config.Level >= Debug {
 		callInfo := retrieveCallInfo()
 		p.printMsg(p.levelPrefixes.debug, callInfo, messages)
 	}
