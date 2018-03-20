@@ -43,7 +43,7 @@ import (
 	)
 func main(){
 	// log levels are 0 - 7 ( RFC 5424 )
-	log := pepper.NewDefaultLevel(7)
+	log := pepper.NewDefaultLevel(pepper.Debug)
 	
 	log.Info("this is a message")
 }
